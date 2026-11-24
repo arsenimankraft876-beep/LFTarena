@@ -13,7 +13,8 @@ function GoogleMark() { return <svg width="18" height="18" viewBox="0 0 48 48" a
 export function AuthCard() {
   const [signup, setSignup] = useState(true), [busy, setBusy] = useState(false), [message, setMessage] = useState<Message>({ text: "", kind: "" }), [hasRequestedCode, setHasRequestedCode] = useState(false);
   const [email, setEmail] = useState(""), [password, setPassword] = useState(""), [code, setCode] = useState(""), [codeHint, setCodeHint] = useState("We will send the code to your email."), [remaining, setRemaining] = useState(0);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null), upTab = useRef<HTMLButtonElement>(null), inTab = useRef<HTMLButtonElement>(null);\n  useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null), upTab = useRef<HTMLButtonElement>(null), inTab = useRef<HTMLButtonElement>(null);
+  useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
   const say = (text: string, kind: Message["kind"] = "") => setMessage({ text, kind });
   const tab = (value: boolean) => { setSignup(value); say(""); };
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>) => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); const next = !signup; tab(next); (next ? upTab : inTab).current?.focus(); } };
