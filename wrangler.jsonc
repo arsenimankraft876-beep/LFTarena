@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lftarena",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-11-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true, "traces": { "enabled": true } },
+  "kv_namespaces": [{ "binding": "RATE_LIMITS", "id": "b50939cc8b8a42e099d4466e16ee5b1b" }]
+}
+
