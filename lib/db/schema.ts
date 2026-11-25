@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, integer, uuid, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, timestamp, integer, uuid, uniqueIndex, index, jsonb } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -29,3 +29,19 @@ export const sessions = pgTable("sessions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("sessions_user_id_idx").on(t.userId)]);
 
+export const participantProfiles = pgTable("participant_profiles", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  displayName: text("display_name").notNull(),
+  game: text("game").notNull(),
+  rank: text("rank").notNull(),
+  seeking: text("seeking").notNull(),
+  frame: text("frame").notNull().default("Default"),
+  vibe: jsonb("vibe").$type<string[]>().notNull().default([]),
+  languages: jsonb("languages").$type<string[]>().notNull().default([]),
+  contactPlatform: text("contact_platform").notNull(),
+  contactHandle: text("contact_handle").notNull().default(""),
+  about: text("about").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
