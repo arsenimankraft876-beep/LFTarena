@@ -5,7 +5,7 @@ import { participantProfiles } from "@/lib/db/schema";
 import { currentUser, jsonError, validOrigin } from "@/lib/auth/http";
 
 const options = {
-  game: ["CS2", "Dota 2", "Deadlock", "Valorant", "Fortnite", "Minecraft", "Other"],
+  games: ["CS2", "Dota 2", "Deadlock", "Valorant", "Fortnite", "Minecraft", "Other"],
   rank: ["Unranked", "Beginner", "Intermediate", "Advanced", "Prefer not to say"],
   seeking: ["Chill / Casual", "Competitive", "Practice", "Just to hang out"],
   frame: ["Default", "Supporter Green", "Supporter Gold"],
@@ -16,7 +16,7 @@ const options = {
 
 const profileSchema = z.object({
   displayName: z.string().trim().min(2).max(32),
-  game: z.enum(options.game),
+  games: z.array(z.enum(options.games)).min(1).max(7),
   rank: z.enum(options.rank),
   seeking: z.enum(options.seeking),
   frame: z.enum(options.frame),
@@ -41,13 +41,13 @@ export async function PUT(request: Request) {
   if (!user) return jsonError("Sign in to save your profile.", 401);
   const parsed = profileSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return jsonError("Check the required fields, tags, and character limits.");
-  const { frame, platform, ...data } = parsed.data;
+  const { frame, platform, games, ...data } = parsed.data;
   // Supporter frames are displayed as locked options; only the default is currently available.
   const savedFrame = frame === "Default" ? frame : "Default";
   const db = await getDb();
-  const [profile] = await db.insert(participantProfiles).values({ userId: user.id, ...data, contactPlatform: platform, frame: savedFrame, updatedAt: new Date() }).onConflictDoUpdate({
+  const [profile] = await db.insert(participantProfiles).values({ userId: user.id, ...data, games, game: games[0], contactPlatform: platform, frame: savedFrame, updatedAt: new Date() }).onConflictDoUpdate({
     target: participantProfiles.userId,
-    set: { ...data, contactPlatform: platform, frame: savedFrame, updatedAt: new Date() },
+    set: { ...data, games, game: games[0], contactPlatform: platform, frame: savedFrame, updatedAt: new Date() },
   }).returning({ id: participantProfiles.id });
   return Response.json({ saved: true, id: profile.id }, { headers: { "Cache-Control": "no-store" } });
 }

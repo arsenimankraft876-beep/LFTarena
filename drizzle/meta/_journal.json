@@ -15,6 +15,13 @@
       "when": 1795639316205,
       "tag": "0001_participant_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795710000000,
+      "tag": "0002_profile_games_avatar",
+      "breakpoints": true
     }
   ]
 }

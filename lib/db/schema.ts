@@ -3,6 +3,7 @@ import { pgTable, text, boolean, timestamp, integer, uuid, uniqueIndex, index, j
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
+  avatarUrl: text("avatar_url"),
   passwordHash: text("password_hash"),
   emailVerified: boolean("email_verified").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -34,6 +35,7 @@ export const participantProfiles = pgTable("participant_profiles", {
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
   displayName: text("display_name").notNull(),
   game: text("game").notNull(),
+  games: jsonb("games").$type<string[]>().notNull().default([]),
   rank: text("rank").notNull(),
   seeking: text("seeking").notNull(),
   frame: text("frame").notNull().default("Default"),

@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const tokens = await google.validateAuthorizationCode(code, verifier);
     const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${tokens.accessToken()}` } });
     if (!response.ok) return jsonError("Google sign-in failed. Please try again.", 400);
-    const profile = await response.json() as { sub?: string; email?: string; email_verified?: boolean };
+    const profile = await response.json() as { sub?: string; email?: string; email_verified?: boolean; picture?: string };
     if (!profile.sub || !profile.email || profile.email_verified !== true) return jsonError("Google did not provide a verified email address.", 400);
     const email = profile.email.trim().toLowerCase(), db = await getDb();
     const [linked] = await db.select({ userId: oauthAccounts.userId }).from(oauthAccounts).where(and(eq(oauthAccounts.provider, "google"), eq(oauthAccounts.providerAccountId, profile.sub))).limit(1);
@@ -28,11 +28,12 @@ export async function GET(request: Request) {
       const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, email)).limit(1);
       if (existing) userId = existing.id;
       else {
-        const [created] = await db.insert(users).values({ email, emailVerified: true }).returning({ id: users.id });
+        const [created] = await db.insert(users).values({ email, emailVerified: true, avatarUrl: profile.picture ?? null }).returning({ id: users.id });
         userId = created.id;
       }
       await db.insert(oauthAccounts).values({ userId, provider: "google", providerAccountId: profile.sub }).onConflictDoNothing();
     }
+    if (profile.picture) await db.update(users).set({ avatarUrl: profile.picture }).where(eq(users.id, userId));
     await newSession(userId);
     return Response.redirect(new URL("/app", env.APP_URL));
   } catch {

@@ -5,9 +5,9 @@ const games = ["CS2", "Dota 2", "Deadlock", "Valorant", "Fortnite", "Minecraft",
 const ranks = ["Unranked", "Beginner", "Intermediate", "Advanced", "Prefer not to say"];
 const vibes = ["Mic Required", "Chill / No Toxicity", "Evening Sessions", "Play Regularly", "Voice Chat", "New Player Friendly"];
 const languages = ["English", "Russian", "German", "Spanish", "Turkish", "French", "Polish", "Ukrainian"];
-const emptyProfile = { displayName: "", game: "CS2", rank: "Unranked", seeking: "Chill / Casual", frame: "Default", vibe: ["Chill / No Toxicity"], languages: ["English"], platform: "Discord", contactHandle: "", about: "" };
+const emptyProfile = { displayName: "", games: ["CS2"], rank: "Unranked", seeking: "Chill / Casual", frame: "Default", vibe: ["Chill / No Toxicity"], languages: ["English"], platform: "Discord", contactHandle: "", about: "" };
 type Profile = typeof emptyProfile;
-type SavedProfile = Omit<Profile, "game" | "rank" | "seeking" | "frame" | "platform"> & { game: string; rank: string; seeking: string; frame: string; contactPlatform: string };
+type SavedProfile = Omit<Profile, "rank" | "seeking" | "frame" | "platform"> & { game?: string; games?: string[]; rank: string; seeking: string; frame: string; contactPlatform: string };
 
 function SelectField({ label, value, onChange, options, id }: { label: string; value: string; onChange: (v: string) => void; options: string[]; id: string }) {
   return <div className="profile-field"><label htmlFor={id}>{label}</label><select id={id} value={value} onChange={e => onChange(e.target.value)}>{options.map(option => <option key={option}>{option}</option>)}</select></div>;
@@ -18,7 +18,7 @@ function TagChoices({ title, options, selected, onChange, hint }: { title: strin
 }
 
 export function ParticipantProfileForm({ profile }: { profile: SavedProfile | null }) {
-  const [form, setForm] = useState<Profile>({ ...emptyProfile, ...profile, platform: profile?.contactPlatform ?? emptyProfile.platform, vibe: profile?.vibe ?? emptyProfile.vibe, languages: profile?.languages ?? emptyProfile.languages });
+  const [form, setForm] = useState<Profile>({ ...emptyProfile, ...profile, games: profile?.games?.length ? profile.games : profile?.game ? [profile.game] : emptyProfile.games, platform: profile?.contactPlatform ?? emptyProfile.platform, vibe: profile?.vibe ?? emptyProfile.vibe, languages: profile?.languages ?? emptyProfile.languages });
   const [busy, setBusy] = useState(false), [message, setMessage] = useState("");
   const update = <K extends keyof Profile>(key: K, value: Profile[K]) => setForm(current => ({ ...current, [key]: value }));
   const submit = async (event: FormEvent) => {
@@ -27,7 +27,7 @@ export function ParticipantProfileForm({ profile }: { profile: SavedProfile | nu
       const response = await fetch("/api/profile", { method: "PUT", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify(form) });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Could not save your profile. Try again.");
-      setMessage("Profile saved. Your details are private to your account for now.");
+      window.location.assign("/");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save your profile. Try again."); }
     finally { setBusy(false); }
   };
@@ -36,7 +36,7 @@ export function ParticipantProfileForm({ profile }: { profile: SavedProfile | nu
     <div className="profile-intro"><div className="eyebrow small">NEW LFT PROFILE</div><h2>Who are you looking for?</h2><p>Share a few details so your next squad can find you.</p></div>
     <div className="profile-grid">
       <div className="profile-field"><label htmlFor="display-name">Player name</label><input id="display-name" required minLength={2} maxLength={32} value={form.displayName} onChange={e => update("displayName", e.target.value)} placeholder="How teammates can call you" autoComplete="nickname" /></div>
-      <SelectField id="game" label="Game" value={form.game} onChange={v => update("game", v)} options={games}/>
+      <TagChoices title="Games you play" hint="Choose one or more" options={games} selected={form.games} onChange={v => update("games", v)}/>
       <SelectField id="rank" label="Your rank" value={form.rank} onChange={v => update("rank", v)} options={ranks}/>
       <SelectField id="seeking" label="What are you looking to play?" value={form.seeking} onChange={v => update("seeking", v)} options={["Chill / Casual", "Competitive", "Practice", "Just to hang out"]}/>
       <div className="profile-field"><label htmlFor="frame">Card frame</label><select id="frame" value={form.frame} onChange={e => update("frame", e.target.value)}><option>Default</option><option disabled>Supporter Green — supporter only</option><option disabled>Supporter Gold — supporter only</option></select></div>

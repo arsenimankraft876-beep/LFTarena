@@ -10,5 +10,5 @@ export default async function AppHome() {
   if (!user) redirect("/");
   const db = await getDb();
   const [profile] = await db.select().from(participantProfiles).where(eq(participantProfiles.userId, user.id)).limit(1);
-  return <main className="app-shell"><header className="app-header"><a className="brand" href="/app"><i/>LFTarena</a><div className="account-menu"><span>{user.email}</span><SignOutButton/></div></header><section className="profile-page"><div className="eyebrow"><span className="eyebrow-icon">✳</span> PLAYER PROFILE</div><h1>Find your next squad</h1><p className="lead">Tell teammates what you play and when you like to play.</p><ParticipantProfileForm profile={profile ?? null}/></section></main>;
+  return <main className="app-shell"><header className="app-header"><a className="brand" href="/"><i/>LFTarena</a><div className="account-menu"><span className="account-avatar">{user.avatarUrl ? <img src={user.avatarUrl} alt=""/> : user.email.slice(0,1).toUpperCase()}</span><span>{user.email}</span><SignOutButton/></div></header><section className="profile-page"><div className="eyebrow"><span className="eyebrow-icon">✳</span> PLAYER PROFILE</div><h1>Find your next squad</h1><p className="lead">Tell teammates what you play and when you like to play.</p><ParticipantProfileForm profile={profile ?? null}/></section></main>;
 }

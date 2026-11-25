@@ -2,17 +2,18 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
-import { participantProfiles } from "@/lib/db/schema";
+import { participantProfiles, users } from "@/lib/db/schema";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlayerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const db = await getDb();
-  const [profile] = await db.select({ id: participantProfiles.id, displayName: participantProfiles.displayName, game: participantProfiles.game, rank: participantProfiles.rank, seeking: participantProfiles.seeking, frame: participantProfiles.frame, vibe: participantProfiles.vibe, languages: participantProfiles.languages, platform: participantProfiles.contactPlatform, about: participantProfiles.about }).from(participantProfiles).where(eq(participantProfiles.id, id)).limit(1);
+  const [profile] = await db.select({ id: participantProfiles.id, displayName: participantProfiles.displayName, games: participantProfiles.games, game: participantProfiles.game, rank: participantProfiles.rank, seeking: participantProfiles.seeking, frame: participantProfiles.frame, vibe: participantProfiles.vibe, languages: participantProfiles.languages, platform: participantProfiles.contactPlatform, about: participantProfiles.about, avatarUrl: users.avatarUrl }).from(participantProfiles).innerJoin(users, eq(participantProfiles.userId, users.id)).where(eq(participantProfiles.id, id)).limit(1);
   if (!profile) notFound();
-  return <main className="public-profile-shell"><header className="app-header"><Link className="brand" href="/"><i/>LFTarena</Link><Link href="/" className="back-link">← Back to home</Link></header><article className="public-profile-card">
-    <div className="public-avatar">{profile.displayName.trim().slice(0, 1).toUpperCase()}</div><div className="eyebrow"><span className="status-dot"/> LFT PLAYER</div><h1>{profile.displayName}</h1><p className="profile-subtitle">{profile.game} <span>·</span> {profile.rank}</p><div className="public-divider"/>
+  const profileGames = profile.games?.length ? profile.games : [profile.game];
+  return <main className="public-profile-shell"><header className="app-header"><Link className="brand" href="/"><i/>LFTarena</Link><Link href="/players" className="back-link">← All players</Link></header><article className="public-profile-card">
+    <div className="public-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt=""/> : profile.displayName.trim().slice(0, 1).toUpperCase()}</div><div className="eyebrow"><span className="status-dot"/> LFT PLAYER</div><h1>{profile.displayName}</h1><p className="profile-subtitle">{profileGames.join(" · ")} <span>·</span> {profile.rank}</p><div className="public-divider"/>
     <div className="public-facts"><div><span>Looking to play</span><strong>{profile.seeking}</strong></div><div><span>Contact platform</span><strong>{profile.platform}</strong></div></div>
     {profile.about && <section className="public-about"><h2>About</h2><p>{profile.about}</p></section>}
     <section className="public-about"><h2>Vibe</h2><div className="tag-list">{profile.vibe.map(tag => <span className="tag selected" key={tag}>{tag}</span>)}</div></section>
